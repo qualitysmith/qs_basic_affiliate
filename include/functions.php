@@ -1,45 +1,92 @@
 <?
+include( 'config.php' );
+include( 'database.php' );
+
 function projectDetailsFields() {
+	$result = "";
+	foreach( projectDetails() AS $key => $value ) {
+		$escaped_value = htmlspecialchars($value);
+		$result .= "<input type=\"hidden\" name=\"details[$key]\" value=\"$escaped_value\" />";
+	}
+	return $result;
+}
+
+function projectDetails() {
 	if( isset($_REQUEST['details']) && is_array( $_REQUEST['details'] ) ) {
-		$result = "";
-		foreach( $_REQUEST['details'] AS $key => $value ) {
-			$escaped_value = htmlspecialchars($value);
-			$result .= "<input type=\"hidden\" name=\"details[$key]\" value=\"$escaped_value\" />";
-		}
-		return $result;
+		return $_REQUEST['details'];
 	} else {
 		// FIXME: Error?
-		return "";
+		return Array();
 	}
 }
 
 function tradeField() {
-	if( isset( $_REQUEST['data']['Trade'] ) ) {
-		$trade = $_REQUEST['data']['Trade'];
-		return "<input type=\"hidden\" name=\"data[Trade]\" value=\"$trade\" />";
+	$trade = trade();
+	return "<input type=\"hidden\" name=\"data[Trade]\" value=\"$trade\" />";
+}
+
+function data() {
+	if( isset( $_REQUEST['data'] ) && is_array( $_REQUEST['data'] ) ) {
+		return $_REQUEST['data'];
 	} else {
 		// FIXME: Error?
-		return "";
+		return Array();
 	}
+}
+
+function trade() {
+	$data = data();
+	return $data['Trade'];
 }
 
 function processPost() {
-	$xml = generateXml();
+	connectToDatabase();
+	$id = createInitialTask();
+	$xml = generateXml($id);
+	addRequestXml( $id, $xml );
 	$response = postXml($xml);
-	var_dump( $response );
-	if( parseResponse( $response ) ) {
-		// TODO: log success transaction
-	} else {
-		// TODO: log failure transaction
-	}
+	addResponse( $id, $response );
 }
 
-function xmlHeader() {
+function now() {
+	return date('Y-m-d H:i:s O');
+}
+
+function createInitialTask() {
+	$data = data();
+	$insert = Array(
+		'trade' => trade(),
+		'first_name' => $data['FirstName'],
+		'last_name' => $data['LastName'],
+		'address' => $data['AddressLine1'],
+		'zip' => $data['Zip'],
+		'phone' => $data['Phone'],
+		'alternate_phone' => $data['AlternatePhone'],
+		'email' => $data['Email'],
+		'trade_questions' => json_encode( projectDetails() ),
+		'created_at' => now(),
+		'updated_at' => now()
+	);
+	return dbInsert( 'tasks', $insert );
+}
+
+function addRequestXml( $id, $xml ) {
+	dbUpdate( 'tasks', Array( 'request_xml' => $xml, 'updated_at' => now() ), $id );
+}
+
+function addResponse( $id, $response ) {
+	$success = parseResponse( $response );
+	dbUpdate( 'tasks', Array( 'response_xml' => $response, 'accepted' => $success, 'updated_at' => now() ), $id );
+}
+
+function xmlHeader( $id ) {
+	global $AffiliateName, $AffiliateCode;
+
 	return "<LeadSet>
-	<AffiliateName></AffiliateName>
-	<AffiliateCode></AffiliateCode>
+	<AffiliateName>$AffiliateName</AffiliateName>
+	<AffiliateCode>$AffiliateCode</AffiliateCode>
 	<Lead>
-		<LeadID></LeadID>\n"; // FIXME: set a unique LeadID
+		<LeadID>$id</LeadID>\n";
 }
 
 function xmlFooter() {
@@ -58,8 +105,10 @@ function baseDataXml() {
 	if( isset( $_REQUEST['data'] ) && is_array( $_REQUEST['data'] ) ) {
 		$xml = "";
 		foreach( $_REQUEST['data'] AS $key => $value ) {
-			$escaped_value = xmlentities($value);
-			$xml .= "\t\t<$key>$escaped_value</$key>\n";
+			if( trim($value) != '' ) {
+				$escaped_value = xmlentities($value);
+				$xml .= "\t\t<$key>$escaped_value</$key>\n";
+			}
 		}
 		return $xml;
 	} else {
@@ -72,10 +121,12 @@ function projectDetailsXml() {
 	if( isset($_REQUEST['details']) && is_array( $_REQUEST['details'] ) ) {
 		$xml = "\t\t<ProjectDetails>\n";
 		foreach( $_REQUEST['details'] AS $key => $value ) {
-			$xml .= "\t\t\t<Detail>\n";
-			$xml .= "\t\t\t\t<Name>$key</Name>\n";
-			$xml .= "\t\t\t\t<Value>$value</Value>\n";
-			$xml .= "\t\t\t</Detail>\n";
+			if( trim($value) != '' ) {
+				$xml .= "\t\t\t<Detail>\n";
+				$xml .= "\t\t\t\t<Name>$key</Name>\n";
+				$xml .= "\t\t\t\t<Value>$value</Value>\n";
+				$xml .= "\t\t\t</Detail>\n";
+			}
 		}
 		$xml .= "\t\t</ProjectDetails>\n";
 		return $xml;
@@ -85,8 +136,8 @@ function projectDetailsXml() {
 	}
 }
 
-function generateXml() {
-	$xml = xmlHeader();
+function generateXml( $id ) {
+	$xml = xmlHeader( $id );
 	$xml .= baseDataXml();
 	$xml .= projectDetailsXml();
 	$xml .= xmlFooter();
@@ -94,8 +145,10 @@ function generateXml() {
 }
 
 function postXml( $xml ) {
+	global $QualitySmithEndpoint;
+
 	$options = Array( 'headers' => Array( 'Content-type' => 'text/xml' ) );
-	$url = "http://www.qualitysmith.com/affiliates/incoming/incoming_leads_test.php";
+	$url = $QualitySmithEndpoint;
 	$response = http_parse_message( http_post_data( $url, $xml, $options ) );
 	return $response->body;
 }

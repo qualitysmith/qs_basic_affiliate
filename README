@@ -1,0 +1,4 @@
+INSTALL
+
+Create a PostgreSQL database and user and load the include/create_tables.sql into it (e.g. cat include/create_tables.sql | psql ...).
+Copy include/config.php.dist to include/config.php and fill in the database connect info.

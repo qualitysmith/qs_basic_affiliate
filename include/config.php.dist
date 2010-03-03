@@ -1,0 +1,13 @@
+<?
+// Copy this file to 'config.php' and fill in the right data
+$AffiliateName = ''; // Given to you by QualitySmith
+$AffiliateCode = ''; // Given to you by QualitySmith
+$DatabaseHost = ''; // The host of the database server
+$DatabasePort = ''; // The port of the database server
+$DatabaseName = ''; // The database name to connect to
+$DatabaseUser = ''; // The user to connect as
+$DatabasePassword = ''; // The users password
+
+// This is the test endpoint
+$QualitySmithEndpoint = 'http://www.qualitysmith.com/affiliates/incoming/incoming_leads_test.php';
+?>
