@@ -25,16 +25,21 @@ function tradeField() {
 
 function processPost() {
 	$xml = generateXml();
-	// TODO: send xml
-	// TODO: log transaction
+	$response = postXml($xml);
+	var_dump( $response );
+	if( parseResponse( $response ) ) {
+		// TODO: log success transaction
+	} else {
+		// TODO: log failure transaction
+	}
 }
 
 function xmlHeader() {
 	return "<LeadSet>
-	<AffiliateName>Example Company</AffiliateName>
-	<AffiliateCode>1b826051506f463f07307598fcf12fd6</AffiliateCode>
+	<AffiliateName></AffiliateName>
+	<AffiliateCode></AffiliateCode>
 	<Lead>
-		<LeadID>9485202</LeadID>\n";
+		<LeadID></LeadID>\n"; // FIXME: set a unique LeadID
 }
 
 function xmlFooter() {
@@ -86,5 +91,20 @@ function generateXml() {
 	$xml .= projectDetailsXml();
 	$xml .= xmlFooter();
 	return $xml;
+}
+
+function postXml( $xml ) {
+	$options = Array( 'headers' => Array( 'Content-type' => 'text/xml' ) );
+	$url = "http://www.qualitysmith.com/affiliates/incoming/incoming_leads_test.php";
+	$response = http_parse_message( http_post_data( $url, $xml, $options ) );
+	return $response->body;
+}
+
+function parseResponse( $response ) {
+	if( strpos($response, "<CompleteSuccess>true</CompleteSuccess>") === false ) {
+		return false;
+	} else {
+		return true;
+	}
 }
 ?>

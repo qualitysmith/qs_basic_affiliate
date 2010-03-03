@@ -5,24 +5,21 @@
 <!--
 	var systemType = Array();
 	systemType["Heating"] = Array(
-		"Furnace",
-		"Boiler",
-		"Radiant Floor",
-		"Baseboard",
-		"Geothermal",
-		"Heat Pump"
+		"Natural Gas",
+		"Electric",
+		"Heat Pump",
+		"Oil",
+		"Propane Gas",
+		"Radiator/Boiler",
+		"Baseboard Heat",
+		"In-floor",
+		"Geothermal"
 	);
 	systemType["Cooling"] = Array(
-		"A/C",
+		"Central Air (cooling)",
 		"Heat Pump"
 	);
 	systemType["Both"] = Array(
-		"Furnace",
-		"Boiler",
-		"A/C",
-		"Radiant Floor",
-		"Baseboard",
-		"Geothermal",
 		"Heat Pump"
 	);
 
