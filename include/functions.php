@@ -149,7 +149,7 @@ function postXml( $xml ) {
 
 	$options = Array( 'headers' => Array( 'Content-type' => 'text/xml' ) );
 	$url = $QualitySmithEndpoint;
-	$response = http_parse_message( http_post_data( $url, $xml, $options ) );
+	$response = @http_parse_message( http_post_data( $url, $xml, $options ) );
 	return $response->body;
 }
 
