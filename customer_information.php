@@ -5,7 +5,7 @@
 <script type="text/javascript" src="validation.js"></script>
 
 <h4>Customer Information</h4>
-<form action="thankyou.php" method="post">
+<form action="thankyou.php" method="post" onSubmit="return validate();">
 	<?= projectDetailsFields() ?>
 	<?= tradeField() ?>
 	<div>
@@ -37,7 +37,7 @@
 		<input type="text" name="data[Email]" validateFormat="^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$" validateError="must be a valid email" />
 	</div>
 
-	<input type="submit" value="Continue" onClick="return validate();" />
+	<input type="submit" value="Continue" />
 </form>
 
 <? include( 'include/footer.php' ); ?>
